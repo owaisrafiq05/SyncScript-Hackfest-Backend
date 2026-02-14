@@ -26,9 +26,9 @@ export class MailerService {
     try {
       let subject = '';
       if (type === OtpType.EMAIL_VERIFICATION) {
-        subject = `Neighbourly | Verify your account`;
+        subject = `SyncScript | Verify your account`;
       } else if (type === OtpType.PASSWORD_RESET) {
-        subject = `Neighbourly | Reset Password`;
+        subject = `SyncScript | Reset Password`;
       } else {
         console.info('Unsupported OTP type');
         return;
@@ -58,7 +58,7 @@ export class MailerService {
                     <table role="presentation" style="width: 100%; border-collapse: collapse;">
                       <tr>
                         <td align="center" style="padding-bottom: 30px;">
-                          <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #ffffff; letter-spacing: -0.5px;">Neighbourly</h1>
+                          <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #ffffff; letter-spacing: -0.5px;">SyncScript</h1>
                         </td>
                       </tr>
                       <tr>

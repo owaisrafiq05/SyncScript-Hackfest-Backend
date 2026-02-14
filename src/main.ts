@@ -31,10 +31,10 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const config = new DocumentBuilder()
-    .setTitle('Neighbourly Backend API')
-    .setDescription('Neighbourly Backend API Documentation')
+    .setTitle('SyncScript Backend API')
+    .setDescription('SyncScript Backend API Documentation')
     .setVersion('1.0')
-    .addTag('Neighbourly Backend API')
+    .addTag('SyncScript Backend API')
     .addBearerAuth({ name: 'JWT-auth', type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' })
     .addSecurityRequirements('JWT-auth')
     .build();
