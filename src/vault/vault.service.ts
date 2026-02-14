@@ -1,0 +1,214 @@
+import { User } from '@db';
+import { AuditAction, VaultPrivacy, VaultRole } from '@db';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/common/services/prisma.service';
+import { AppLoggerService } from 'src/common/services/logger.service';
+import { ApiResponse } from 'src/common/types';
+import { throwError } from 'src/common/utils/helpers';
+import { vaultSelect, VaultSelect } from './queries';
+import { CreateVaultDto, UpdateVaultDto, AddVaultMemberDto } from './dto';
+
+@Injectable()
+export class VaultService {
+  private readonly logger = new AppLoggerService(VaultService.name);
+
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async create(user: User, dto: CreateVaultDto): Promise<ApiResponse<VaultSelect>> {
+    try {
+      const vault = await this.prismaService.vault.create({
+        data: {
+          name: dto.name,
+          description: dto.description ?? null,
+          privacy: dto.privacy ?? 'PRIVATE',
+          ownerId: user.id,
+          members: {
+            create: {
+              userId: user.id,
+              role: VaultRole.OWNER,
+              acceptedAt: new Date(),
+            },
+          },
+        },
+        select: vaultSelect,
+      });
+
+      await this.prismaService.auditLog.create({
+        data: {
+          vaultId: vault.id,
+          userId: user.id,
+          action: AuditAction.VAULT_CREATED,
+          entityType: 'vault',
+          entityId: vault.id,
+        },
+      });
+
+      return {
+        message: 'Vault created successfully',
+        success: true,
+        data: vault,
+      };
+    } catch (err) {
+      this.logger.error('Failed to create vault', err.stack, VaultService.name);
+      this.logger.logData({
+        error: err.message,
+        status: err.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        method: 'create',
+        userId: user.id,
+      });
+      throw throwError(err.message || 'Failed to create vault', err.status || HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async update(user: User, vaultId: string, dto: UpdateVaultDto): Promise<ApiResponse<VaultSelect>> {
+    try {
+      const vault = await this.prismaService.vault.findFirst({
+        where: { id: vaultId, deletedAt: null },
+      });
+      if (!vault) throw throwError('Vault not found', HttpStatus.NOT_FOUND);
+      if (vault.ownerId !== user.id) throw throwError('Forbidden: only the owner can update this vault', HttpStatus.FORBIDDEN);
+
+      const updateData: { name?: string; description?: string | null; privacy?: VaultPrivacy } = {};
+      if (dto.name !== undefined) updateData.name = dto.name;
+      if (dto.description !== undefined) updateData.description = dto.description;
+      if (dto.privacy !== undefined) updateData.privacy = dto.privacy;
+
+      const updated = await this.prismaService.vault.update({
+        where: { id: vaultId },
+        data: updateData,
+        select: vaultSelect,
+      });
+
+      await this.prismaService.auditLog.create({
+        data: {
+          vaultId: updated.id,
+          userId: user.id,
+          action: AuditAction.VAULT_UPDATED,
+          entityType: 'vault',
+          entityId: updated.id,
+          details: { updated: updateData },
+        },
+      });
+
+      return {
+        message: 'Vault updated successfully',
+        success: true,
+        data: updated,
+      };
+    } catch (err) {
+      this.logger.error('Failed to update vault', err.stack, VaultService.name);
+      this.logger.logData({
+        error: err.message,
+        status: err.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        method: 'update',
+        vaultId,
+        userId: user.id,
+      });
+      throw throwError(err.message || 'Failed to update vault', err.status || HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async delete(user: User, vaultId: string): Promise<ApiResponse<{ id: string }>> {
+    try {
+      const vault = await this.prismaService.vault.findFirst({
+        where: { id: vaultId, deletedAt: null },
+      });
+      if (!vault) throw throwError('Vault not found', HttpStatus.NOT_FOUND);
+      if (vault.ownerId !== user.id) throw throwError('Forbidden: only the owner can delete this vault', HttpStatus.FORBIDDEN);
+
+      await this.prismaService.vault.update({
+        where: { id: vaultId },
+        data: { deletedAt: new Date() },
+      });
+
+      await this.prismaService.auditLog.create({
+        data: {
+          vaultId: vault.id,
+          userId: user.id,
+          action: AuditAction.VAULT_DELETED,
+          entityType: 'vault',
+          entityId: vault.id,
+        },
+      });
+
+      return {
+        message: 'Vault deleted successfully',
+        success: true,
+        data: { id: vaultId },
+      };
+    } catch (err) {
+      this.logger.error('Failed to delete vault', err.stack, VaultService.name);
+      this.logger.logData({
+        error: err.message,
+        status: err.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        method: 'delete',
+        vaultId,
+        userId: user.id,
+      });
+      throw throwError(err.message || 'Failed to delete vault', err.status || HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async addMember(user: User, vaultId: string, dto: AddVaultMemberDto): Promise<ApiResponse<{ vaultId: string; userId: string; role: VaultRole }>> {
+    try {
+      if (dto.role === VaultRole.OWNER) {
+        throw throwError('Cannot add a member with OWNER role; vault already has an owner', HttpStatus.BAD_REQUEST);
+      }
+
+      const vault = await this.prismaService.vault.findFirst({
+        where: { id: vaultId, deletedAt: null },
+      });
+      if (!vault) throw throwError('Vault not found', HttpStatus.NOT_FOUND);
+      if (vault.ownerId !== user.id) {
+        throw throwError('Forbidden: only the owner can add members to this vault', HttpStatus.FORBIDDEN);
+      }
+
+      const targetUser = await this.prismaService.user.findUnique({
+        where: { id: dto.userId },
+      });
+      if (!targetUser) throw throwError('User not found', HttpStatus.NOT_FOUND);
+
+      const existing = await this.prismaService.vaultMember.findUnique({
+        where: { vaultId_userId: { vaultId, userId: dto.userId } },
+      });
+      if (existing) throw throwError('User is already a member of this vault', HttpStatus.CONFLICT);
+
+      const member = await this.prismaService.vaultMember.create({
+        data: {
+          vaultId,
+          userId: dto.userId,
+          role: dto.role,
+          invitedBy: user.id,
+          acceptedAt: new Date(),
+        },
+      });
+
+      await this.prismaService.auditLog.create({
+        data: {
+          vaultId,
+          userId: user.id,
+          action: AuditAction.MEMBER_ADDED,
+          entityType: 'member',
+          entityId: member.id,
+          details: { addedUserId: dto.userId, role: dto.role },
+        },
+      });
+
+      return {
+        message: 'Member added to vault successfully',
+        success: true,
+        data: { vaultId, userId: member.userId, role: member.role },
+      };
+    } catch (err) {
+      this.logger.error('Failed to add vault member', err.stack, VaultService.name);
+      this.logger.logData({
+        error: err.message,
+        status: err.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        method: 'addMember',
+        vaultId,
+        userId: user.id,
+      });
+      throw throwError(err.message || 'Failed to add member to vault', err.status || HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+}
