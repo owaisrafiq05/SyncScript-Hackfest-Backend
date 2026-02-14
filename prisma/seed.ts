@@ -3,7 +3,7 @@ import { PrismaClient } from './generated/prisma/client';
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({
-    connectionString: process.env.DATABASE_URL ?? 'postgresql://danish:root@localhost:5432/neighbourly?schema=public',
+    connectionString: process.env.DATABASE_URL ?? 'postgresql://danish:root@localhost:5432/hackathon?schema=public',
   }),
 });
 
