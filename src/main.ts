@@ -35,7 +35,7 @@ async function bootstrap() {
     .setDescription('Neighbourly Backend API Documentation')
     .setVersion('1.0')
     .addTag('Neighbourly Backend API')
-    .addBearerAuth()
+    .addBearerAuth({ name: 'JWT-auth', type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' })
     .addSecurityRequirements('JWT-auth')
     .build();
 
