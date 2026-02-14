@@ -23,6 +23,7 @@
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.975.0",
     "@aws-sdk/client-s3": "^3.975.0",
+    "@google/generative-ai": "^0.24.1",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -58,8 +59,8 @@
     "@types/node": "^22.10.7",
     "@types/nodemailer": "^7.0.5",
     "@types/supertest": "^6.0.2",
-    "eslint": "^9.18.0",
     "dotenv": "^16.4.5",
+    "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",

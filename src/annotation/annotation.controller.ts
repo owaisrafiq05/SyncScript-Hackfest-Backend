@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse as ApiResponseDoc, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { User } from '@db';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { ApiResponse } from 'src/common/types';
 import { AnnotationService } from './annotation.service';
-import { CreateAnnotationDto, UpdateAnnotationDto } from './dto';
+import { CreateAnnotationDto, UpdateAnnotationDto, EnhanceAnnotationDto, EnhancedAnnotationResponseDto } from './dto';
 import { AnnotationSelect } from './queries';
 
 @Controller('vault/:vaultId/source/:sourceId/annotation')
@@ -13,6 +13,25 @@ import { AnnotationSelect } from './queries';
 @UseGuards(AuthGuard)
 export class AnnotationController {
   constructor(private readonly annotationService: AnnotationService) {}
+
+  @Post('enhance')
+  @ApiOperation({
+    summary: 'Enhance annotation content (AI)',
+    description:
+      'Accepts markdown content and returns AI-enhanced markdown using Gemini (grammar, clarity, structure). Preserves markdown formatting. Requires vault membership (CONTRIBUTOR or OWNER).',
+  })
+  @ApiParam({ name: 'vaultId', type: String, description: 'Vault ID' })
+  @ApiParam({ name: 'sourceId', type: String, description: 'Source ID' })
+  @ApiBody({ type: EnhanceAnnotationDto })
+  @ApiResponseDoc({ status: 200, description: 'Enhanced markdown content', type: EnhancedAnnotationResponseDto })
+  async enhance(
+    @CurrentUser() user: User,
+    @Param('vaultId') vaultId: string,
+    @Param('sourceId') sourceId: string,
+    @Body() dto: EnhanceAnnotationDto,
+  ): Promise<ApiResponse<{ enhancedMarkdown: string }>> {
+    return this.annotationService.enhanceContent(user, vaultId, sourceId, dto.contentMarkdown);
+  }
 
   @Post()
   @ApiOperation({
