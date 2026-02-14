@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { VaultModule } from './vault/vault.module';
 import { SourceModule } from './source/source.module';
 import { AnnotationModule } from './annotation/annotation.module';
+import { CitationModule } from './citation/citation.module';
 import { MailerModule } from './mailer/mailer.module';
 import { BullMQModule } from './common/modules/bullmq.module';
 
@@ -23,6 +24,7 @@ import { BullMQModule } from './common/modules/bullmq.module';
     VaultModule,
     SourceModule,
     AnnotationModule,
+    CitationModule,
     MailerModule,
   ],
   controllers: [AppController],
