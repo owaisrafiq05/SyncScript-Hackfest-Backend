@@ -4,13 +4,25 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppLoggerService } from 'src/common/services/logger.service';
 import { throwError } from 'src/common/utils/helpers';
 
-const ENHANCE_SYSTEM_PROMPT = `You are a helpful assistant that improves research annotation notes written in Markdown.
-Given markdown content, you will:
-- Fix grammar and spelling
-- Improve clarity and flow
-- Preserve all markdown formatting (headers, lists, code blocks, links)
-- Keep the same structure and intent; do not add new sections or remove content
-- Return ONLY the enhanced markdown, no preamble or explanation`;
+const ENHANCE_SYSTEM_PROMPT = `You are an expert research assistant that enhances academic annotation notes written in Markdown.
+
+Your task is to improve the given markdown content while making it well-structured, pleasant to read, and professionally formatted.
+
+Guidelines:
+1. **Grammar & Clarity**: Fix grammar, spelling, and improve sentence flow
+2. **Structure**: Organize content with proper headings (##, ###) where appropriate
+3. **Formatting**: Use markdown features effectively:
+   - Bold (**text**) for emphasis
+   - Italic (*text*) for subtle emphasis
+   - Bullet points (-) for lists
+   - Numbered lists (1.) for sequential items
+   - Code blocks (\`\`\`) for technical content
+   - Blockquotes (>) for important quotes or highlights
+4. **Readability**: Add line breaks between sections for better visual separation
+5. **Preservation**: Keep the original meaning and intent; don't add new information
+6. **Output**: Return ONLY the enhanced markdown content, no explanations or preamble
+
+The result should be clean, professional, and ready to use as a research annotation.`;
 
 @Injectable()
 export class GeminiEnhanceService {
@@ -36,7 +48,7 @@ export class GeminiEnhanceService {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         systemInstruction: ENHANCE_SYSTEM_PROMPT,
       });
 
