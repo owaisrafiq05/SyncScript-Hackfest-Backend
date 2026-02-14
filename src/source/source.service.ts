@@ -12,6 +12,37 @@ import { CreateSourceDto, UpdateSourceDto } from './dto';
 
 const SOURCE_UPLOAD_PREFIX = 'uploads/sources/';
 
+/** Normalize form/JSON value to string[] for Prisma (authors, keywords). */
+function ensureStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((x): x is string => typeof x === 'string');
+  }
+  if (typeof value === 'string') {
+    const t = value.trim();
+    if (!t) return [];
+    try {
+      const parsed = JSON.parse(t) as unknown;
+      return Array.isArray(parsed)
+        ? parsed.filter((x): x is string => typeof x === 'string')
+        : [t];
+    } catch {
+      return t.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}
+
+/** Normalize year from form (string) or JSON (number) to number | null. */
+function ensureYear(value: unknown): number | null {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+  if (typeof value === 'string') {
+    const n = Number(value.trim());
+    return Number.isNaN(n) ? null : n;
+  }
+  return null;
+}
+
 function mimeToFileType(mime: string): FileType {
   if (!mime) return FileType.OTHER;
   if (mime === 'application/pdf') return FileType.PDF;
@@ -68,14 +99,14 @@ export class SourceService {
           vaultId,
           createdBy: user.id,
           title: dto.title,
-          authors: dto.authors ?? [],
+          authors: ensureStringArray(dto.authors),
           publication: dto.publication ?? null,
-          year: dto.year ?? null,
+          year: ensureYear(dto.year),
           externalUrl: dto.externalUrl ?? null,
           sourceType: dto.sourceType ?? SourceType.PDF,
           fileId: dto.fileId ?? null,
           abstract: dto.abstract ?? null,
-          keywords: dto.keywords ?? [],
+          keywords: ensureStringArray(dto.keywords),
         },
         select: sourceSelect,
       });
@@ -143,14 +174,14 @@ export class SourceService {
           vaultId,
           createdBy: user.id,
           title: dto.title,
-          authors: dto.authors ?? [],
+          authors: ensureStringArray(dto.authors),
           publication: dto.publication ?? null,
-          year: dto.year ?? null,
+          year: ensureYear(dto.year),
           externalUrl: dto.externalUrl ?? null,
           sourceType: dto.sourceType ?? SourceType.PDF,
           fileId: fileRecord.id,
           abstract: dto.abstract ?? null,
-          keywords: dto.keywords ?? [],
+          keywords: ensureStringArray(dto.keywords),
         },
         select: sourceSelect,
       });
