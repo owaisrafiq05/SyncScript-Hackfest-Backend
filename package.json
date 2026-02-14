@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "postinstall": "prisma generate",
     "build": "nest build && node -e \"require('fs').cpSync('prisma/generated', 'dist/prisma/generated', {recursive: true})\"",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest build && node -e \"require('fs').cpSync('prisma/generated', 'dist/prisma/generated', {recursive: true})\" && node dist/src/main",

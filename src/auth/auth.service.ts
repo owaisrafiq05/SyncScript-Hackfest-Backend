@@ -53,7 +53,7 @@ export class AuthService {
 
   async register(res: Response, registerDto: RegisterDto): Promise<ApiResponse<RegisterUserResponse>> {
     try {
-      const { name, email, password, role } = registerDto;
+      const { name, email, password } = registerDto;
 
       const existingUser = await this.prisma.user.findUnique({
         where: { email },
@@ -63,7 +63,7 @@ export class AuthService {
       const { salt, hash } = hashPassword(password);
 
       const user = await this.prisma.user.create({
-        data: { name, email, password: hash, salt, role },
+        data: { name, email, password: hash, salt },
         omit: {
           password: true,
           salt: true,
@@ -75,7 +75,6 @@ export class AuthService {
       const payload: JwtPayload = {
         id: user.id,
         email: user.email,
-        role: user.role,
       };
       const token = await this.signJwtTokenToCookies(res, payload);
 
@@ -112,7 +111,6 @@ export class AuthService {
       const payload: JwtPayload = {
         id: user.id,
         email: user.email,
-        role: user.role,
       };
 
       const token = await this.signJwtTokenToCookies(res, payload);

@@ -3,8 +3,6 @@ import { ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { VaultService } from './vault.service';
 import { User } from '@db';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole } from '@db';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { ApiResponse } from 'src/common/types';
 import { CreateVaultDto, UpdateVaultDto, AddVaultMemberDto } from './dto';
@@ -17,7 +15,6 @@ export class VaultController {
   constructor(private readonly vaultService: VaultService) {}
 
   @Post()
-  @Roles(...Object.values(UserRole))
   @ApiProperty({
     title: 'Create Vault',
     description: 'Create a new vault. The current user becomes the owner.',
@@ -31,7 +28,6 @@ export class VaultController {
   }
 
   @Put(':id')
-  @Roles(...Object.values(UserRole))
   @ApiProperty({
     title: 'Update Vault',
     description: 'Update vault name, description, or privacy. Only the vault owner can update.',
@@ -47,7 +43,6 @@ export class VaultController {
   }
 
   @Delete(':id')
-  @Roles(...Object.values(UserRole))
   @ApiProperty({
     title: 'Delete Vault',
     description: 'Soft-delete a vault. Only the vault owner can delete.',
@@ -61,7 +56,6 @@ export class VaultController {
   }
 
   @Post(':id/members')
-  @Roles(...Object.values(UserRole))
   @ApiProperty({
     title: 'Add Vault Member',
     description: 'Add a user as a member to a vault with CONTRIBUTOR or VIEWER role. Only the vault owner can add members.',

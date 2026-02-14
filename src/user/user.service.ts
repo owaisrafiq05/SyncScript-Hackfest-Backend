@@ -1,4 +1,4 @@
-import { Prisma, User, UserRole } from '@db';
+import { Prisma, User } from '@db';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { StorageService } from 'src/storage/storage.service';
@@ -25,14 +25,13 @@ export class UserService {
     };
   }
 
-  async getAllUsersByRole(user: User, role: UserRole, query?: QueryParams): Promise<ApiResponse<GetAllUserResponse>> {
+  async getAllUsers(user: User, query?: QueryParams): Promise<ApiResponse<GetAllUserResponse>> {
     try {
       const { page = 1, limit = 20, search = '', filter = '', sort = '' } = query || {};
 
       const where: Prisma.UserWhereInput = {
         deletedAt: null,
         id: { not: user.id },
-        role,
       };
       const orderBy: Prisma.UserOrderByWithRelationInput = {};
 

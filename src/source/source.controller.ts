@@ -23,8 +23,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { User, UserRole } from '@db';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { User } from '@db';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { ApiResponse } from 'src/common/types';
 import { SourceService } from './source.service';
@@ -39,7 +38,6 @@ export class SourceController {
   constructor(private readonly sourceService: SourceService) {}
 
   @Post()
-  @Roles(...Object.values(UserRole))
   @ApiOperation({
     summary: 'Create Source',
     description:
@@ -81,7 +79,6 @@ export class SourceController {
   }
 
   @Get()
-  @Roles(...Object.values(UserRole))
   @ApiOperation({ summary: 'List Sources', description: 'Get paginated list of sources in the vault. Requires vault membership.' })
   @ApiProperty({
     title: 'List Sources',
@@ -105,7 +102,6 @@ export class SourceController {
   }
 
   @Get(':id')
-  @Roles(...Object.values(UserRole))
   @ApiOperation({ summary: 'Get Source', description: 'Get a single source by ID. Requires vault membership.' })
   @ApiProperty({
     title: 'Get Source',
@@ -122,7 +118,6 @@ export class SourceController {
   }
 
   @Put(':id')
-  @Roles(...Object.values(UserRole))
   @ApiOperation({ summary: 'Update Source', description: 'Update a source. Only CONTRIBUTOR or OWNER can update.' })
   @ApiProperty({
     title: 'Update Source',
@@ -141,7 +136,6 @@ export class SourceController {
   }
 
   @Delete(':id')
-  @Roles(...Object.values(UserRole))
   @ApiOperation({ summary: 'Delete Source', description: 'Soft-delete a source. Only CONTRIBUTOR or OWNER can delete.' })
   @ApiProperty({
     title: 'Delete Source',

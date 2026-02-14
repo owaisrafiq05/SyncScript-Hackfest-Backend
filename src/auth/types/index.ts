@@ -1,9 +1,8 @@
-import { User, UserRole } from '@db';
+import { User } from '@db';
 
 export type JwtPayload = {
   id: string;
   email: string;
-  role: UserRole;
 };
 
 export interface RegisterUserResponse {

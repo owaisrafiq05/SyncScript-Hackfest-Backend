@@ -5,8 +5,7 @@ import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { ApiResponse } from 'src/common/types';
 import { LoginUserResponse, RegisterUserResponse } from './types';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole, User } from '@db';
+import { User } from '@db';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
 import { Cron } from '@nestjs/schedule';
@@ -45,7 +44,6 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard)
-  @Roles(...Object.values(UserRole))
   @ApiProperty({
     title: 'Logout User',
     description: 'Logout a user',
@@ -68,7 +66,6 @@ export class AuthController {
 
   @Put('verify-email')
   @UseGuards(AuthGuard)
-  @Roles(...Object.values(UserRole))
   @ApiProperty({ title: 'Verify Email' })
   async verifyEmail(@Req() request: Request, @CurrentUser() user: User) {
     return await this.authService.verifyEmail(request, user);

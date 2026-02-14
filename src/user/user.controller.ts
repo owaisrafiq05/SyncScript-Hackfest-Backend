@@ -3,8 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiParam, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UserService } from './user.service';
-import { User, UserRole } from '@db';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { User } from '@db';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { QueryParams, MulterFile, ApiResponse } from 'src/common/types';
 import { UpdateUserDto } from './dto/user.dto';
@@ -33,33 +32,29 @@ export class UserController {
     await this.redisService.deleteMany(keys);
   }
 
-  @Roles(...Object.values(UserRole))
-  @ApiProperty({ title: 'Get All Users', description: 'Get all users by role' })
+  @ApiProperty({ title: 'Get All Users', description: 'Get all users' })
   @ApiQuery({ name: 'page', type: Number, required: false })
   @ApiQuery({ name: 'limit', type: Number, required: false })
   @ApiQuery({ name: 'sort', type: String, required: false })
   @ApiQuery({ name: 'filter', type: String, required: false })
   @ApiQuery({ name: 'search', type: String, required: false })
-  @ApiParam({ name: 'role', type: String, enum: UserRole, required: true })
-  @Get('all/:role')
+  @Get('all')
   async getAllUsers(
     @CurrentUser() user: User,
-    @Param('role') role: UserRole,
     @Query() query: QueryParams,
   ): Promise<ApiResponse<GetAllUserResponse>> {
     const { page = 1, limit = 20, search = '', filter = '', sort = '' } = query || {};
-    const cacheKey = this.getCacheKey('all', role, page, limit, search, filter, sort);
+    const cacheKey = this.getCacheKey('all', page, limit, search, filter, sort);
 
     const cached = await this.redisService.get<ApiResponse<GetAllUserResponse>>(cacheKey);
     if (cached) return cached;
 
-    const response = await this.userService.getAllUsersByRole(user, role, query);
+    const response = await this.userService.getAllUsers(user, query);
     await this.redisService.set(cacheKey, response, this.CACHE_TTL);
 
     return response;
   }
 
-  @Roles(...Object.values(UserRole))
   @ApiProperty({ title: 'Get Current User', description: 'Get current authenticated user' })
   @Get('me')
   async getCurrentUser(@CurrentUser() user: User): Promise<ApiResponse<UserSelect>> {
@@ -74,7 +69,6 @@ export class UserController {
     return response;
   }
 
-  @Roles(...Object.values(UserRole))
   @ApiProperty({ title: 'Update User', description: 'Update user profile information', type: UpdateUserDto })
   @Put('me')
   async updateUser(@CurrentUser() user: User, @Body() updateUserDto: UpdateUserDto): Promise<ApiResponse<UserSelect>> {
@@ -83,7 +77,6 @@ export class UserController {
     return response;
   }
 
-  @Roles(...Object.values(UserRole))
   @ApiProperty({ title: 'Update Avatar', description: 'Update user avatar image' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('avatar'))
@@ -94,7 +87,6 @@ export class UserController {
     return response;
   }
 
-  @Roles(...Object.values(UserRole))
   @ApiProperty({
     title: 'Get Complete User Profile',
     description: 'Get complete user profile with userProfile information by user ID',

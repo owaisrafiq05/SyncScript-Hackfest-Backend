@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { UserRole } from '@db';
 
 export class RegisterDto {
   @IsNotEmpty({ message: 'Name is required' })
@@ -22,11 +21,6 @@ export class RegisterDto {
   )
   @ApiProperty({ type: String, required: true, example: 'Abc12345%' })
   password: string;
-
-  @IsNotEmpty({ message: 'User role is required' })
-  @IsEnum(UserRole, { message: 'Invalid user role' })
-  @ApiProperty({ type: String, enum: UserRole, required: true, example: UserRole.SEEKER })
-  role: UserRole;
 }
 
 export class LoginDto {
