@@ -7,6 +7,7 @@ import { ApiResponse } from 'src/common/types';
 import { throwError } from 'src/common/utils/helpers';
 import { MulterFile } from 'src/common/types';
 import { StorageService } from 'src/storage/storage.service';
+import { CollaborationGateway } from 'src/collaboration/collaboration.gateway';
 import { sourceSelect, SourceSelect } from './queries';
 import { CreateSourceDto, UpdateSourceDto } from './dto';
 
@@ -29,6 +30,7 @@ export class SourceService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly storageService: StorageService,
+    private readonly collaborationGateway: CollaborationGateway,
   ) {}
 
   private async ensureVaultMember(userId: string, vaultId: string): Promise<{ role: VaultRole }> {
@@ -89,6 +91,8 @@ export class SourceService {
           entityId: source.id,
         },
       });
+
+      this.collaborationGateway.emitSourceCreated(vaultId, source);
 
       return {
         message: 'Source created successfully',
@@ -175,6 +179,8 @@ export class SourceService {
           entityId: fileRecord.id,
         },
       });
+
+      this.collaborationGateway.emitSourceCreated(vaultId, source);
 
       return {
         message: 'Source created and file uploaded successfully',
@@ -321,6 +327,8 @@ export class SourceService {
         },
       });
 
+      this.collaborationGateway.emitSourceUpdated(vaultId, updated);
+
       return {
         message: 'Source updated successfully',
         success: true,
@@ -363,6 +371,8 @@ export class SourceService {
           entityId: sourceId,
         },
       });
+
+      this.collaborationGateway.emitSourceDeleted(vaultId, sourceId);
 
       return {
         message: 'Source deleted successfully',

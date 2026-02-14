@@ -11,6 +11,7 @@ import { AnnotationModule } from './annotation/annotation.module';
 import { CitationModule } from './citation/citation.module';
 import { MailerModule } from './mailer/mailer.module';
 import { BullMQModule } from './common/modules/bullmq.module';
+import { CollaborationModule } from './collaboration/collaboration.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { BullMQModule } from './common/modules/bullmq.module';
     StorageModule,
     UserModule,
     VaultModule,
+    CollaborationModule,
     SourceModule,
     AnnotationModule,
     CitationModule,

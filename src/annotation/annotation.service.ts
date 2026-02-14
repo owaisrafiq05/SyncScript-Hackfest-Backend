@@ -5,6 +5,7 @@ import { PrismaService } from 'src/common/services/prisma.service';
 import { AppLoggerService } from 'src/common/services/logger.service';
 import { ApiResponse } from 'src/common/types';
 import { throwError } from 'src/common/utils/helpers';
+import { CollaborationGateway } from 'src/collaboration/collaboration.gateway';
 import { annotationSelect, AnnotationSelect } from './queries';
 import { CreateAnnotationDto, UpdateAnnotationDto } from './dto';
 
@@ -12,7 +13,10 @@ import { CreateAnnotationDto, UpdateAnnotationDto } from './dto';
 export class AnnotationService {
   private readonly logger = new AppLoggerService(AnnotationService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly collaborationGateway: CollaborationGateway,
+  ) {}
 
   private async ensureVaultMember(userId: string, vaultId: string): Promise<{ role: VaultRole }> {
     const member = await this.prismaService.vaultMember.findUnique({
@@ -72,6 +76,8 @@ export class AnnotationService {
           details: { sourceId },
         },
       });
+
+      this.collaborationGateway.emitAnnotationCreated(vaultId, sourceId, annotation);
 
       return {
         message: 'Annotation created successfully',
@@ -245,6 +251,8 @@ export class AnnotationService {
         },
       });
 
+      this.collaborationGateway.emitAnnotationUpdated(vaultId, sourceId, updated);
+
       return {
         message: 'Annotation updated successfully',
         success: true,
@@ -296,6 +304,8 @@ export class AnnotationService {
           entityId: annotationId,
         },
       });
+
+      this.collaborationGateway.emitAnnotationDeleted(vaultId, sourceId, annotationId);
 
       return {
         message: 'Annotation deleted successfully',
