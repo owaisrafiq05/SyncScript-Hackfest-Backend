@@ -280,4 +280,90 @@ export class VaultService {
       throw throwError(err.message || 'Failed to add member to vault', err.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async getAuditLogsByVault(
+    user: User,
+    vaultId: string,
+    options?: { limit?: number; offset?: number; action?: string },
+  ): Promise<ApiResponse<AuditLogEntry[]>> {
+    try {
+      const vault = await this.prismaService.vault.findFirst({
+        where: { id: vaultId, deletedAt: null },
+      });
+      if (!vault) throw throwError('Vault not found', HttpStatus.NOT_FOUND);
+      const membership = await this.prismaService.vaultMember.findUnique({
+        where: { vaultId_userId: { vaultId, userId: user.id } },
+      });
+      if (vault.ownerId !== user.id && !membership) {
+        throw throwError('You do not have access to this vault', HttpStatus.FORBIDDEN);
+      }
+
+      const limit = Math.min(Math.max(options?.limit ?? 50, 1), 100);
+      const offset = Math.max(options?.offset ?? 0, 0);
+      const where: { vaultId: string; action?: AuditAction } = { vaultId };
+      if (options?.action && Object.values(AuditAction).includes(options.action as AuditAction)) {
+        where.action = options.action as AuditAction;
+      }
+
+      const logs = await this.prismaService.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+        select: {
+          id: true,
+          vaultId: true,
+          userId: true,
+          action: true,
+          entityType: true,
+          entityId: true,
+          details: true,
+          ipAddress: true,
+          userAgent: true,
+          createdAt: true,
+          user: {
+            select: { id: true, name: true, email: true, avatar: true },
+          },
+        },
+      });
+
+      const data: AuditLogEntry[] = logs.map((l) => ({
+        id: l.id,
+        vaultId: l.vaultId,
+        userId: l.userId,
+        action: l.action,
+        entityType: l.entityType,
+        entityId: l.entityId,
+        details: l.details,
+        ipAddress: l.ipAddress,
+        userAgent: l.userAgent,
+        createdAt: l.createdAt,
+        user: l.user,
+      }));
+
+      return {
+        message: 'Audit logs retrieved successfully',
+        success: true,
+        data,
+      };
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error('Failed to get audit logs', (err as Error)?.stack, VaultService.name);
+      throw throwError((err as Error)?.message || 'Failed to get audit logs', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
+
+export type AuditLogEntry = {
+  id: string;
+  vaultId: string;
+  userId: string;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  details: unknown;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  user: { id: string; name: string; email: string; avatar: string | null };
+};
