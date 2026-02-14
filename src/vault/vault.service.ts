@@ -8,6 +8,7 @@ import { throwError } from 'src/common/utils/helpers';
 import { CollaborationGateway } from 'src/collaboration/collaboration.gateway';
 import { vaultSelect, VaultSelect, VaultWithMyRole, vaultSelectWithMembers, VaultWithMyRoleAndMembers } from './queries';
 import { CreateVaultDto, UpdateVaultDto, AddVaultMemberDto } from './dto';
+import { VaultAuditStatsEntry } from './dto';
 
 @Injectable()
 export class VaultService {
@@ -362,6 +363,82 @@ export class VaultService {
       throw throwError((err as Error)?.message || 'Failed to get audit logs', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async getVaultAuditStats(
+    user: User,
+    vaultId: string,
+  ): Promise<ApiResponse<VaultAuditStatsEntry[]>> {
+    try {
+      const vault = await this.prismaService.vault.findFirst({
+        where: { id: vaultId, deletedAt: null },
+      });
+      if (!vault) throw throwError('Vault not found', HttpStatus.NOT_FOUND);
+      const membership = await this.prismaService.vaultMember.findUnique({
+        where: { vaultId_userId: { vaultId, userId: user.id } },
+      });
+      if (vault.ownerId !== user.id && !membership) {
+        throw throwError('You do not have access to this vault', HttpStatus.FORBIDDEN);
+      }
+
+      const grouped = await this.prismaService.auditLog.groupBy({
+        by: ['userId', 'action'],
+        where: { vaultId },
+        _count: { id: true },
+      });
+
+      const userIds = [...new Set(grouped.map((g) => g.userId))];
+      if (userIds.length === 0) {
+        return {
+          message: 'Vault audit stats retrieved successfully',
+          success: true,
+          data: [],
+        };
+      }
+
+      const users = await this.prismaService.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true, avatar: true },
+      });
+      const userMap = new Map(users.map((u) => [u.id, u]));
+
+      const statsByUser = new Map<
+        string,
+        { actionCounts: Record<string, number>; totalCount: number }
+      >();
+      for (const row of grouped) {
+        let entry = statsByUser.get(row.userId);
+        if (!entry) {
+          entry = { actionCounts: {}, totalCount: 0 };
+          statsByUser.set(row.userId, entry);
+        }
+        entry.actionCounts[row.action] = row._count.id;
+        entry.totalCount += row._count.id;
+      }
+
+      const data: VaultAuditStatsEntry[] = Array.from(statsByUser.entries())
+        .map(([uid, stats]) => {
+          const u = userMap.get(uid);
+          return {
+            user: u
+              ? { id: u.id, name: u.name, email: u.email, avatar: u.avatar }
+              : { id: uid, name: 'Unknown', email: '', avatar: null },
+            actionCounts: stats.actionCounts,
+            totalCount: stats.totalCount,
+          };
+        })
+        .sort((a, b) => b.totalCount - a.totalCount);
+
+      return {
+        message: 'Vault audit stats retrieved successfully',
+        success: true,
+        data,
+      };
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error('Failed to get vault audit stats', (err as Error)?.stack, VaultService.name);
+      throw throwError((err as Error)?.message || 'Failed to get vault audit stats', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 export type AuditLogEntry = {
@@ -377,3 +454,5 @@ export type AuditLogEntry = {
   createdAt: Date;
   user: { id: string; name: string; email: string; avatar: string | null };
 };
+
+export type { VaultAuditStatsEntry } from './dto';

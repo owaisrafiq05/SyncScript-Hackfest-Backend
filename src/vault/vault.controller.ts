@@ -5,7 +5,7 @@ import { VaultService } from './vault.service';
 import { User } from '@db';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { ApiResponse } from 'src/common/types';
-import { CreateVaultDto, UpdateVaultDto, AddVaultMemberDto, AuditLogResponseDto, AUDIT_ACTIONS } from './dto';
+import { CreateVaultDto, UpdateVaultDto, AddVaultMemberDto, AuditLogResponseDto, AUDIT_ACTIONS, UserContributionStatsDto } from './dto';
 import { VaultSelect, VaultWithMyRole, VaultWithMyRoleAndMembers } from './queries';
 
 @Controller('vault')
@@ -48,6 +48,21 @@ export class VaultController {
     @Query('action') action?: string,
   ): Promise<ApiResponse<import('./vault.service').AuditLogEntry[]>> {
     return this.vaultService.getAuditLogsByVault(user, id, { limit, offset, action });
+  }
+
+  @Get(':id/stats')
+  @ApiOperation({
+    summary: 'Get Vault Audit Stats',
+    description:
+      'Get per-user contribution stats for a vault based on audit logs. Returns each user who has performed at least one action in the vault, with counts per action type (e.g. SOURCE_ADDED, ANNOTATION_ADDED) and total count. Only vault members can access.',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Vault UUID' })
+  @ApiResponseDoc({ status: 200, description: 'Vault audit stats by user (data array of UserContributionStatsDto)', type: [UserContributionStatsDto] })
+  async getVaultAuditStats(
+    @CurrentUser() user: User,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<ApiResponse<import('./vault.service').VaultAuditStatsEntry[]>> {
+    return this.vaultService.getVaultAuditStats(user, id);
   }
 
   @Get(':id')
