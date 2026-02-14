@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { User, UserRole } from '@db';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { User } from '@db';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { ApiResponse } from 'src/common/types';
 import { AnnotationService } from './annotation.service';
@@ -16,7 +15,6 @@ export class AnnotationController {
   constructor(private readonly annotationService: AnnotationService) {}
 
   @Post()
-  @Roles(...Object.values(UserRole))
   @ApiOperation({
     summary: 'Create Annotation',
     description:
@@ -34,7 +32,6 @@ export class AnnotationController {
   }
 
   @Get()
-  @Roles(...Object.values(UserRole))
   @ApiOperation({
     summary: 'List Annotations',
     description: 'Get paginated list of annotations for a source. Requires vault membership.',
@@ -68,7 +65,6 @@ export class AnnotationController {
   }
 
   @Get(':id')
-  @Roles(...Object.values(UserRole))
   @ApiOperation({
     summary: 'Get Annotation',
     description: 'Get a single annotation by ID. Requires vault membership.',
@@ -90,7 +86,6 @@ export class AnnotationController {
   }
 
   @Put(':id')
-  @Roles(...Object.values(UserRole))
   @ApiOperation({
     summary: 'Update Annotation',
     description: 'Update an annotation. Version is incremented when content changes. Only CONTRIBUTOR or OWNER can update.',
@@ -114,7 +109,6 @@ export class AnnotationController {
   }
 
   @Delete(':id')
-  @Roles(...Object.values(UserRole))
   @ApiOperation({
     summary: 'Delete Annotation',
     description: 'Soft-delete an annotation. Only CONTRIBUTOR or OWNER can delete.',

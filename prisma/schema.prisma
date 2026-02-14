@@ -12,11 +12,6 @@ datasource db {
 // EXISTING USER MODELS (Keep as is)
 // ============================================================================
 
-enum UserRole {
-  PROVIDER
-  SEEKER
-}
-
 enum LoginProvider {
   EMAIL
   GOOGLE
@@ -29,7 +24,6 @@ model User {
   avatar        String?
   password      String?
   salt          String?
-  role          UserRole
   loginProvider LoginProvider @default(EMAIL)
 
   hasNotifications Boolean @default(false)

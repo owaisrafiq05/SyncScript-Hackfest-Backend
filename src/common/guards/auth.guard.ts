@@ -1,16 +1,12 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { PrismaService } from '../services/prisma.service';
-import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { UserRole } from '@db';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -27,13 +23,9 @@ export class AuthGuard implements CanActivate {
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.id },
-        select: { id: true, role: true, email: true, name: true },
+        select: { id: true, email: true, name: true },
       });
       if (!user) throw new UnauthorizedException('Unauthorized Access');
-
-      const roles = this.reflector.get<UserRole[]>(ROLES_KEY, context.getHandler());
-
-      if (roles && !roles.includes(user.role as UserRole)) throw new ForbiddenException('Forbidden Access');
 
       (request as any).user = user;
 

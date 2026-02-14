@@ -3,7 +3,6 @@ import { Prisma } from '@db';
 export const userSelect = {
   id: true,
   email: true,
-  role: true,
   name: true,
   avatar: true,
   loginProvider: true,
@@ -23,7 +22,6 @@ export type UserSelect = Prisma.UserGetPayload<{
 export const completeUserSelect = {
   id: true,
   email: true,
-  role: true,
   name: true,
   avatar: true,
   loginProvider: true,
@@ -64,7 +62,6 @@ export const minimalUserSelect = {
   id: true,
   email: true,
   name: true,
-  role: true,
   avatar: true,
 } satisfies Prisma.UserSelect;
 
