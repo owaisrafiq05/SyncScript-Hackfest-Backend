@@ -5,6 +5,7 @@ import { PrismaService } from 'src/common/services/prisma.service';
 import { AppLoggerService } from 'src/common/services/logger.service';
 import { ApiResponse } from 'src/common/types';
 import { throwError } from 'src/common/utils/helpers';
+import { CollaborationGateway } from 'src/collaboration/collaboration.gateway';
 import { vaultSelect, VaultSelect, VaultWithMyRole, vaultSelectWithMembers, VaultWithMyRoleAndMembers } from './queries';
 import { CreateVaultDto, UpdateVaultDto, AddVaultMemberDto } from './dto';
 
@@ -12,7 +13,10 @@ import { CreateVaultDto, UpdateVaultDto, AddVaultMemberDto } from './dto';
 export class VaultService {
   private readonly logger = new AppLoggerService(VaultService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly collaborationGateway: CollaborationGateway,
+  ) {}
 
   async findAllByUser(user: User): Promise<ApiResponse<VaultWithMyRole[]>> {
     try {
@@ -261,6 +265,12 @@ export class VaultService {
           entityId: member.id,
           details: { addedUserId: dto.userId, role: dto.role },
         },
+      });
+
+      this.collaborationGateway.emitVaultAddedToUser(dto.userId, {
+        vaultId,
+        vaultName: vault.name,
+        addedByName: user.name ?? 'Someone',
       });
 
       return {

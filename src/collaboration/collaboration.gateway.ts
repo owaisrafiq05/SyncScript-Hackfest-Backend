@@ -27,6 +27,8 @@ export const CollaborationEvents = {
   ANNOTATION_EDITING: 'annotation:editing',
   /** Live draft: content changes while editing (reflect immediately on other clients) */
   ANNOTATION_DRAFT: 'annotation:draft',
+  /** Push notification: user was added to a vault */
+  NOTIFICATION_VAULT_ADDED: 'notification:vault_added',
 } as const;
 
 export interface EditorInfo {
@@ -37,6 +39,11 @@ export interface EditorInfo {
 /** Room prefix for vault-scoped rooms: join room `vault:${vaultId}` */
 export function vaultRoom(vaultId: string): string {
   return `vault:${vaultId}`;
+}
+
+/** Room for user-scoped push notifications: join room `user:${userId}` */
+export function userRoom(userId: string): string {
+  return `user:${userId}`;
 }
 
 /** In-memory presence: annotationId -> editors (userId -> name). Cleared on server restart. */
@@ -98,6 +105,17 @@ export class CollaborationGateway
       if (map.size === 0) editorsByAnnotation.delete(annotationId);
       this.broadcastEditors(vaultId, annotationId);
     }
+  }
+
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('joinUser')
+  async handleJoinUser(client: AuthenticatedSocket): Promise<{ success: boolean; message?: string }> {
+    const user = client.data.user;
+    if (!user) return { success: false, message: 'Unauthorized' };
+    const room = userRoom(user.id);
+    await client.join(room);
+    this.logger.log(`User ${user.id} joined user room ${room}`, CollaborationGateway.name);
+    return { success: true };
   }
 
   @UseGuards(WsJwtGuard)
@@ -282,5 +300,14 @@ export class CollaborationGateway
       sourceId,
       annotationId,
     });
+  }
+
+  /** Emit to a specific user (e.g. when they are added to a vault). */
+  emitVaultAddedToUser(
+    userId: string,
+    payload: { vaultId: string; vaultName: string; addedByName: string },
+  ): void {
+    if (!this.server) return;
+    this.server.to(userRoom(userId)).emit(CollaborationEvents.NOTIFICATION_VAULT_ADDED, payload);
   }
 }
