@@ -54,9 +54,9 @@ export class StorageService {
     });
   }
 
-  async uploadFile(file: MulterFile) {
+  async uploadFile(file: MulterFile, keyPrefix = 'uploads/inventory/') {
     try {
-      const filename = `uploads/inventory/${getRandomFileName()}-${file.originalname}`;
+      const filename = `${keyPrefix}${getRandomFileName()}-${file.originalname}`;
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key: filename,
