@@ -40,6 +40,9 @@ RUN pnpm build
 RUN ls -la dist/ || (echo "Build failed - dist directory not found" && exit 1)
 RUN test -f dist/main.js || test -f dist/src/main.js || (echo "Build failed - main.js not found" && ls -la dist/ && exit 1)
 
+# Bundle @prisma/client-runtime-utils (dereferenced) for runner - Prisma client in dist/ needs it at runtime
+RUN mkdir -p /tmp/prisma-runtime && (cd node_modules/@prisma && tar chf - client-runtime-utils) | (cd /tmp/prisma-runtime && tar xf -)
+
 # Stage 3: Production
 FROM node:20-alpine AS runner
 
@@ -69,9 +72,11 @@ COPY --from=builder /app/dist ./dist
 # Verify dist was copied correctly
 RUN ls -la dist/ || (echo "dist directory not found after copy" && exit 1)
 
+# Prisma generated client in dist/ requires @prisma/client-runtime-utils; place it next to the client so require() resolves.
+RUN mkdir -p dist/prisma/generated/prisma/node_modules/@prisma
+COPY --from=builder /tmp/prisma-runtime/client-runtime-utils dist/prisma/generated/prisma/node_modules/@prisma/
+
 ENV NODE_ENV=production
-# Ensure modules required by Prisma generated client (e.g. from dist/) resolve correctly
-ENV NODE_PATH=/app/node_modules
 
 EXPOSE 8000
 
