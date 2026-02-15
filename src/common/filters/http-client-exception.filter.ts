@@ -8,6 +8,13 @@ interface ErrorResponse {
   success: false;
 }
 
+/** Shape of Prisma PrismaClientKnownRequestError (used so build does not depend on @db type resolution) */
+interface PrismaKnownErrorLike {
+  code: string;
+  message: string;
+  meta?: { target?: string | string[] };
+}
+
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -33,11 +40,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         errorResponse.message = ex.message;
       }
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      const ex = exception as Prisma.PrismaClientKnownRequestError;
+      const ex: PrismaKnownErrorLike = exception as PrismaKnownErrorLike;
+      const target = ex.meta?.target;
+      const targetStr = Array.isArray(target) ? target.join(', ') : (target ?? '');
       switch (ex.code) {
         case 'P2002':
           errorResponse.statusCode = HttpStatus.CONFLICT;
-          errorResponse.message = 'Unique constraint failed on the fields: ' + (ex.meta?.target ?? '');
+          errorResponse.message = 'Unique constraint failed on the fields: ' + targetStr;
           break;
         case 'P2025':
           errorResponse.statusCode = HttpStatus.NOT_FOUND;
