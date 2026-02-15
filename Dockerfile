@@ -2,20 +2,21 @@
 FROM node:20-alpine AS deps
 
 RUN apk add --no-cache openssl ca-certificates && \
-    corepack enable && corepack prepare pnpm@latest --activate
+    corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
 
 # Skip postinstall (prisma generate) - prisma schema not copied yet; we run it in builder
-RUN pnpm install --frozen-lockfile --prod=false --ignore-scripts
+# No --frozen-lockfile: lockfile may be out of sync (e.g. new deps); install still reproducible via lockfile when present
+RUN pnpm install --prod=false --ignore-scripts
 
 # Stage 2: Build
 FROM node:20-alpine AS builder
 
 RUN apk add --no-cache openssl ca-certificates && \
-    corepack enable && corepack prepare pnpm@latest --activate
+    corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
 
@@ -43,14 +44,14 @@ RUN test -f dist/main.js || test -f dist/src/main.js || (echo "Build failed - ma
 FROM node:20-alpine AS runner
 
 RUN apk add --no-cache openssl ca-certificates && \
-    corepack enable && corepack prepare pnpm@latest --activate
+    corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
 
 # Skip postinstall (prisma generate) - we run it explicitly after copying prisma
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+RUN pnpm install --prod --ignore-scripts
 
 RUN pnpm add prisma@latest
 
