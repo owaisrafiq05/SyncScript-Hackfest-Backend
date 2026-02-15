@@ -70,6 +70,8 @@ COPY --from=builder /app/dist ./dist
 RUN ls -la dist/ || (echo "dist directory not found after copy" && exit 1)
 
 ENV NODE_ENV=production
+# Ensure modules required by Prisma generated client (e.g. from dist/) resolve correctly
+ENV NODE_PATH=/app/node_modules
 
 EXPOSE 8000
 
