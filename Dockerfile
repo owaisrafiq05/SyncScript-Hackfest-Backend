@@ -8,7 +8,8 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm install --frozen-lockfile --prod=false
+# Skip postinstall (prisma generate) - prisma schema not copied yet; we run it in builder
+RUN pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
 # Stage 2: Build
 FROM node:20-alpine AS builder
@@ -48,7 +49,8 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm install --frozen-lockfile --prod
+# Skip postinstall (prisma generate) - we run it explicitly after copying prisma
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 RUN pnpm add prisma@latest
 
