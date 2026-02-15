@@ -21,19 +21,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
 
     if (exception instanceof HttpException) {
-      const exceptionResponse = exception.getResponse();
-      errorResponse.statusCode = exception.getStatus();
+      const ex = exception;
+      const exceptionResponse = ex.getResponse();
+      errorResponse.statusCode = ex.getStatus();
 
-      if (typeof exceptionResponse === 'object' && 'message' in exceptionResponse) {
-        const message = exceptionResponse.message;
+      if (typeof exceptionResponse === 'object' && exceptionResponse !== null && 'message' in exceptionResponse) {
+        const message = (exceptionResponse as { message: string | string[] }).message;
         if (Array.isArray(message)) errorResponse.message = message[0];
         else if (typeof message === 'string') errorResponse.message = message;
-      } else errorResponse.message = exception.message;
+      } else {
+        errorResponse.message = ex.message;
+      }
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      switch (exception.code) {
+      const ex = exception;
+      switch (ex.code) {
         case 'P2002':
           errorResponse.statusCode = HttpStatus.CONFLICT;
-          errorResponse.message = 'Unique constraint failed on the fields: ' + exception.meta?.target;
+          errorResponse.message = 'Unique constraint failed on the fields: ' + ex.meta?.target;
           break;
         case 'P2025':
           errorResponse.statusCode = HttpStatus.NOT_FOUND;
@@ -41,9 +45,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
           break;
         default:
           errorResponse.statusCode = HttpStatus.BAD_REQUEST;
-          errorResponse.message = `Database error: ${exception.message}`;
+          errorResponse.message = `Database error: ${ex.message}`;
       }
-    } else if (exception instanceof Error) errorResponse.message = exception.message;
+    } else if (exception instanceof Error) {
+      errorResponse.message = exception.message;
+    }
 
     response.status(errorResponse.statusCode).json(errorResponse);
   }
