@@ -33,11 +33,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         errorResponse.message = ex.message;
       }
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      const ex = exception;
+      const ex = exception as Prisma.PrismaClientKnownRequestError;
       switch (ex.code) {
         case 'P2002':
           errorResponse.statusCode = HttpStatus.CONFLICT;
-          errorResponse.message = 'Unique constraint failed on the fields: ' + ex.meta?.target;
+          errorResponse.message = 'Unique constraint failed on the fields: ' + (ex.meta?.target ?? '');
           break;
         case 'P2025':
           errorResponse.statusCode = HttpStatus.NOT_FOUND;
