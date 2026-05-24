@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString } from 'class-validator';
-import { CitationFormat } from '@db';
+import { CitationFormat } from '@prisma/client';
 
 export class CreateCitationDto {
   @IsEnum(CitationFormat, { message: 'Format must be a valid CitationFormat' })

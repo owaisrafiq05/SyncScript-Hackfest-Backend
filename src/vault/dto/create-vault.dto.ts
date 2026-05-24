@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
-import { VaultPrivacy } from '@db';
+import { VaultPrivacy } from '@prisma/client';
 
 export class CreateVaultDto {
   @IsString({ message: 'Name must be a string' })
