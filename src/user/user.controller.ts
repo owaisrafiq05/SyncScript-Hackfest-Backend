@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiParam, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UserService } from './user.service';
-import { User } from '@db';
+import { User } from '@prisma/client';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { QueryParams, MulterFile, ApiResponse } from 'src/common/types';
 import { UpdateUserDto } from './dto/user.dto';

@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { Transporter, createTransport } from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
-import { OtpType } from '@db';
+import { OtpType } from '@prisma/client';
 import { throwError } from 'src/common/utils/helpers';
 
 @Injectable()
