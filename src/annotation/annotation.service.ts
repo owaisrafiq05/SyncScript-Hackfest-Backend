@@ -1,5 +1,4 @@
-import { User } from '@db';
-import { AuditAction, VaultRole } from '@db';
+import { User, AuditAction, VaultRole } from '@prisma/client';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { AppLoggerService } from 'src/common/services/logger.service';
