@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsArray, IsEnum, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
-import { SourceType } from '@db';
+import { SourceType } from '@prisma/client';
 
 export class CreateSourceDto {
   @IsString({ message: 'Title must be a string' })

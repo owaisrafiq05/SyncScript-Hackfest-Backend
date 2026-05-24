@@ -3,7 +3,7 @@ import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from 'src/mailer/mailer.service';
 import { QUEUE_NAMES } from '../constants/queue.constants';
-import { OtpType } from '@db';
+import { OtpType } from '@prisma/client';
 
 export interface SendOtpEmailJobData {
   email: string;
