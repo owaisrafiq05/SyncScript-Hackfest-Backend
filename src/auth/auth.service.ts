@@ -9,7 +9,7 @@ import { generateSecureOTP, throwError } from 'src/common/utils/helpers';
 import { ApiResponse } from 'src/common/types';
 import { generateSecureToken, hashPassword, verifyPassword } from 'src/common/utils/hash';
 import { CookieOptions } from 'express';
-import { OtpChannel, OtpType, RateLimitAction, User } from '@db';
+import { OtpChannel, OtpType, RateLimitAction, User } from '@prisma/client';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password.dto';
 import {
   OTP_EXPIRATION_TIME,

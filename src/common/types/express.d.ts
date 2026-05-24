@@ -1,4 +1,4 @@
-import { Prisma, User } from '@db';
+import { Prisma, User } from '@prisma/client';
 
 type UserWithoutPassword = Omit<User, 'password' | 'salt'>;
 

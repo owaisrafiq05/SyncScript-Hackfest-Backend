@@ -1,4 +1,4 @@
-import { Prisma, User } from '@db';
+import { Prisma, User } from '@prisma/client';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { StorageService } from 'src/storage/storage.service';

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
-import { SourceType } from '@db';
+import { SourceType } from '@prisma/client';
 
 export class UpdateSourceDto {
   @IsOptional()

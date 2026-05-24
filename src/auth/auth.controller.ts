@@ -5,7 +5,7 @@ import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { ApiResponse } from 'src/common/types';
 import { LoginUserResponse, RegisterUserResponse } from './types';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { User } from '@db';
+import { User } from '@prisma/client';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
 import { Cron } from '@nestjs/schedule';

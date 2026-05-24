@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { OtpChannel, OtpType } from '@db';
+import { OtpChannel, OtpType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 

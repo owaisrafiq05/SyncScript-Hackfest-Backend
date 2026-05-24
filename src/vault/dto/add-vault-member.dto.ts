@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsUUID } from 'class-validator';
-import { VaultRole } from '@db';
+import { VaultRole } from '@prisma/client';
 
 export class AddVaultMemberDto {
   @IsUUID('4', { message: 'userId must be a valid UUID' })

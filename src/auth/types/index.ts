@@ -1,4 +1,4 @@
-import { User } from '@db';
+import { User } from '@prisma/client';
 
 export type JwtPayload = {
   id: string;
